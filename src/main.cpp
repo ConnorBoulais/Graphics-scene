@@ -412,6 +412,7 @@ public:
 		glUniformMatrix4fv(shapeprog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(shapeprog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 
+
 		T_por = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
 		R = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 		T_attach = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.5, 0));
