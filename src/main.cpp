@@ -72,15 +72,17 @@ public:
 	WindowManager * windowManager = nullptr;
 
 	// Our shader program
-	std::shared_ptr<Program> prog, shapeprog;
+	std::shared_ptr<Program> prog, shapeprog, globeprog, snowprog;
 
 	// Contains vertex information for OpenGL
-	GLuint VertexArrayID, VAO_CYL;
+	GLuint VertexArrayID, VAO_CYL, VAO_SNOW;
 
 	// Data necessary to give our box to OpenGL
-	GLuint VertexBufferID, VertexColorIDBox, IndexBufferIDBox, VBO_CYL_ID;
+	GLuint VertexBufferID, VertexColorIDBox, IndexBufferIDBox, VBO_CYL_ID, VBO_SNOW_ID;
 
-	Shape shape;
+	Shape shape, globeshape;
+
+	int a = 0, d = 0;
 
 	void keyCallback(GLFWwindow *window, int key, int scancode, int action, int mods)
 	{
@@ -91,35 +93,39 @@ public:
 		
 		if (key == GLFW_KEY_W && action == GLFW_PRESS)
 		{
-			mycam.w = 1;
+			//mycam.w = 1;
 		}
 		if (key == GLFW_KEY_W && action == GLFW_RELEASE)
 		{
-			mycam.w = 0;
+			//mycam.w = 0;
 		}
 		if (key == GLFW_KEY_S && action == GLFW_PRESS)
 		{
-			mycam.s = 1;
+			//mycam.s = 1;
 		}
 		if (key == GLFW_KEY_S && action == GLFW_RELEASE)
 		{
-			mycam.s = 0;
+			//mycam.s = 0;
 		}
 		if (key == GLFW_KEY_A && action == GLFW_PRESS)
 		{
-			mycam.a = 1;
+			//mycam.a = 1;
+			a = 1;
 		}
 		if (key == GLFW_KEY_A && action == GLFW_RELEASE)
 		{
-			mycam.a = 0;
+			//mycam.a = 0;
+			a = 0;
 		}
 		if (key == GLFW_KEY_D && action == GLFW_PRESS)
 		{
-			mycam.d = 1;
+			//mycam.d = 1;
+			d = 1;
 		}
 		if (key == GLFW_KEY_D && action == GLFW_RELEASE)
 		{
-			mycam.d = 0;
+			//mycam.d = 0;
+			d = 0;
 		}
 		if (key == GLFW_KEY_N && action == GLFW_PRESS) kn = 1;
 		if (key == GLFW_KEY_N && action == GLFW_RELEASE) kn = 0;
@@ -155,28 +161,31 @@ public:
 		glm::vec3* positions = new glm::vec3[size * 12];
 
 		for (i = 0; i < size; i++) {
-			positions[i * 12 + 0] = glm::vec3(r * cos(t), r * sin(t), length);
-			positions[i * 12 + 1] = glm::vec3(0, 0, length);
+
+			positions[i * 12 + 0] = glm::vec3(r * cos(t), r * sin(t), length);	//1
 			t += dt;
-			positions[i * 12 + 2] = glm::vec3(r * cos(t), r * sin(t), length);
-
-			positions[i * 12 + 3] = glm::vec3(r * cos(t), r * sin(t), length);
-			positions[i * 12 + 4] = glm::vec3(r * cos(t), r * sin(t), -length);
+			positions[i * 12 + 1] = glm::vec3(r * cos(t), r * sin(t), length);	//2	
+			positions[i * 12 + 2] = glm::vec3(0, 0, length);	//3
+			
+			positions[i * 12 + 3] = glm::vec3(r * cos(t), r * sin(t), -length);	//4
+			positions[i * 12 + 4] = glm::vec3(r * cos(t), r * sin(t), length);	//5
 			t -= dt;
-			positions[i * 12 + 5] = glm::vec3(r * cos(t), r * sin(t), length);
+			positions[i * 12 + 5] = glm::vec3(r * cos(t), r * sin(t), length);	//6
 
-			positions[i * 12 + 6] = glm::vec3(r * cos(t), r * sin(t), length);
-			positions[i * 12 + 7] = glm::vec3(r * cos(t), r * sin(t), -length);
+			positions[i * 12 + 6] = glm::vec3(r * cos(t), r * sin(t), length);	//7
+			positions[i * 12 + 7] = glm::vec3(r * cos(t), r * sin(t), -length);	//8
 			t += dt;
-			positions[i * 12 + 8] = glm::vec3(r * cos(t), r * sin(t), -length);
+			positions[i * 12 + 8] = glm::vec3(r * cos(t), r * sin(t), -length);	//9
 
-			positions[i * 12 + 9] = glm::vec3(r * cos(t), r * sin(t), -length);
-			t -= dt;
-			positions[i * 12 + 10] = glm::vec3(r * cos(t), r * sin(t), -length);
-			positions[i * 12 + 11] = glm::vec3(0, 0, -length);
-
+			positions[i * 12 + 9] = glm::vec3(r * cos(t), r * sin(t), -length);	//10
+			t -= dt;		
+			positions[i * 12 + 10] = glm::vec3(r * cos(t), r * sin(t), -length);//11
+			positions[i * 12 + 11] = glm::vec3(0, 0, -length);	//12
+			
+			
 			t += dt;
 		}
+
 
 		/*for (i = 0; i < size * 12; i++){
 			//std::cout << "x: " << positions[i].x << " y: " << positions[i].y << " z: " << positions[i].z << std::endl;
@@ -242,6 +251,30 @@ public:
 		glBindVertexArray(0);
 	}
 
+	void initSnow(int size)
+	{
+		int i;
+
+		glGenVertexArrays(1, &VAO_SNOW);
+		glBindVertexArray(VAO_SNOW);
+
+		glGenBuffers(1, &VBO_SNOW_ID);
+		glBindBuffer(GL_ARRAY_BUFFER, VBO_SNOW_ID);
+
+		glm::vec3 positions[] = {
+			vec3(0.15, 0.3, 0),
+			vec3(-0.05, 0.4, 0),
+			//vec3(-0.1,-0.3, 0),
+			vec3(-0.15,0.3, 0),
+			//vec3(0.0,-0.35, 0),
+			vec3(0.0,0.4, 0)
+		};
+
+		glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * 4, positions, GL_DYNAMIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	}
+
 	/*Note that any gl calls must always happen after a GL state is initialized */
 	void initGeom()
 	{
@@ -251,7 +284,12 @@ public:
 		shape.resize();
 		shape.init();
 
+		globeshape.loadMesh(resourceDirectory + "/higher_res_sphere.obj");
+		globeshape.resize();
+		globeshape.init();
+
 		initCylinder();
+		initSnow(10);
 
 		glBindVertexArray(0);
 
@@ -269,6 +307,11 @@ public:
 		// Enable blending/transparency
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glEnable(GL_CULL_FACE);
+		glCullFace(GL_BACK);
+		glFrontFace(GL_CCW);
+		glEnable(GL_PROGRAM_POINT_SIZE);
 
 		// Initialize the GLSL program.
 		prog = std::make_shared<Program>();
@@ -301,6 +344,38 @@ public:
 		shapeprog->addAttribute("vertPos");
 		shapeprog->addAttribute("vertNor");
 		shapeprog->addAttribute("vertTex");
+
+		// Initialize the GLSL program.
+		globeprog = std::make_shared<Program>();
+		globeprog->setVerbose(true);
+		globeprog->setShaderNames(resourceDirectory + "/globe_vertex.glsl", resourceDirectory + "/globe_fragment.glsl");
+		if (!globeprog->init())
+		{
+			std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+			exit(1); //make a breakpoint here and check the output window for the error message!
+		}
+		globeprog->addUniform("P");
+		globeprog->addUniform("V");
+		globeprog->addUniform("M");
+		globeprog->addUniform("camera_pos");
+		globeprog->addAttribute("vertPos");
+		globeprog->addAttribute("vertNor");
+		globeprog->addAttribute("vertTex");
+
+		snowprog = std::make_shared<Program>();
+		snowprog->setVerbose(true);
+		snowprog->setShaderNames(resourceDirectory + "/snow_vertex.glsl", resourceDirectory + "/snow_fragment.glsl");
+		if (!snowprog->init())
+		{
+			std::cerr << "One or more shaders failed to compile... exiting!" << std::endl;
+			exit(1); //make a breakpoint here and check the output window for the error message!
+		}
+		snowprog->addUniform("P");
+		snowprog->addUniform("V");
+		snowprog->addUniform("M");
+		snowprog->addUniform("t");
+		snowprog->addUniform("r");
+		snowprog->addAttribute("vertPos");
 	}
 
 	glm::mat4 renderBody(mat4 P, mat4 V, mat4 M_parent, float w)
@@ -310,10 +385,10 @@ public:
 		glUniformMatrix4fv(shapeprog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
 		glUniformMatrix4fv(shapeprog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
 
-		glm::mat4 T_por = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0, 0, 0));
-		glm::mat4 R1 = glm::rotate(glm::mat4(1.0f), 0.1f, glm::vec3(0.0f, 0.0f, 1.0f));
-		glm::mat4 R = glm::rotate(glm::mat4(1.0f), w, glm::vec3(0.0f, 1.0f, 0.0f));
-		glm::mat4 T_attach = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
+		glm::mat4 T_por = glm::translate(glm::mat4(1.0f), glm::vec3(-1.5, 0, 0));
+		glm::mat4 R1 = glm::rotate(glm::mat4(1.0f), 0.2f, glm::vec3(0.0f, 0.0f, 1.0f));
+		glm::mat4 R = glm::rotate(glm::mat4(1.0f), w + 0.4f, glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 T_attach = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, -1.0f));
 		glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(2, 1, 1));
 		glm::mat4 M_body = M_parent * T_attach * R * R1 * T_por;
 		M = M_body * S;
@@ -324,7 +399,7 @@ public:
 		return M_body;
 	}
 
-	glm::mat4 renderTail(mat4 P, mat4 V, mat4 M_parent)
+	glm::mat4 renderTail(mat4 P, mat4 V, mat4 M_parent, float w)
 	{
 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
@@ -334,8 +409,8 @@ public:
 		//send the matrices to the shaders
 		mat4 T_por = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.2f));
 		mat4 R = glm::rotate(glm::mat4(1.0f), 1.57f, glm::vec3(0.0f, 1.0f, 0.0f));
-		mat4 T_attach = glm::translate(glm::mat4(1.0f), glm::vec3(3.75f, 0.0f, 0.0f));
-		mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(0.18f, 0.18f, 1.0f));
+		mat4 T_attach = glm::translate(glm::mat4(1.0f), glm::vec3(3.3f, 0.0f, 0.0f));
+		mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(0.18f, 0.18f, 0.8f));
 		glm::mat4 M_tail = M_parent * T_attach * R * T_por;
 		mat4 M = M_tail * S;
 
@@ -349,14 +424,32 @@ public:
 
 		T_por = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
 		R = glm::rotate(glm::mat4(1.0f), 1.57f, glm::vec3(0.0f, 1.0f, 0.0f));
-		T_attach = glm::translate(glm::mat4(1.0f), glm::vec3(-0.2, 0, 2.0));
-		S = glm::scale(glm::mat4(1.0f), glm::vec3(0.6, 0.6, 0.1));
-		mat4 M_rutter = M_tail * T_attach * R * T_por;
-		M = M_rutter * S;
+		T_attach = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 1.55));
+		S = glm::scale(glm::mat4(1.0f), glm::vec3(0.2, 0.2, 0.2));
+		mat4 M_ball = M_tail * T_attach * R * T_por;
+		M = M_ball * S;
 
 		glUniformMatrix4fv(shapeprog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
 		shape.draw(shapeprog);
 		shapeprog->unbind();
+
+		prog->bind();
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glBindVertexArray(VAO_CYL);
+
+		//send the matrices to the shaders
+		T_por = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+		mat4 R1 = glm::rotate(glm::mat4(1.0f), 1.57f, glm::vec3(0.0f, 0.0f, 1.0f));
+		R = glm::rotate(glm::mat4(1.0f), w, glm::vec3(1.0f, 0.0f, 0.0f));
+		T_attach = glm::translate(glm::mat4(1.0f), glm::vec3(-0.2f, 0.0f, 1.55f));
+		S = glm::scale(glm::mat4(1.0f), glm::vec3(0.15f, 0.05f, 0.3f));
+		glm::mat4 M_rutter = M_tail * T_attach * T_por;
+		M = M_rutter * R * R1 * S;
+
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glDrawArrays(GL_TRIANGLES, 0, 50 * 36);
+		prog->unbind();
 		return M_tail;
 	}
 
@@ -386,10 +479,30 @@ public:
 
 		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
 		glDrawArrays(GL_TRIANGLES, 0, 50 * 36);
+
+		T_por = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+		R = glm::rotate(glm::mat4(1.0f), 1.6f/2.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+		T_attach = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, 1.0f));
+		S = glm::scale(glm::mat4(1.0f), glm::vec3(0.12f, 0.12f, 0.3f));
+		glm::mat4 M_s11 = M_parent * T_attach * R * T_por;
+		M = M_s11 * S;
+
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glDrawArrays(GL_TRIANGLES, 0, 50 * 36);
+
+		T_por = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+		R = glm::rotate(glm::mat4(1.0f), -1.6f / 2.0f, glm::vec3(1.0f, 0.0f, 0.0f));
+		T_attach = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -1.0f, -1.0f));
+		S = glm::scale(glm::mat4(1.0f), glm::vec3(0.12f, 0.12f, 0.3f));
+		glm::mat4 M_s21 = M_parent * T_attach * R * T_por;
+		M = M_s21 * S;
+
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glDrawArrays(GL_TRIANGLES, 0, 50 * 36);
 		prog->unbind();
 	}
 
-	glm::mat4 renderBlade(mat4 P, mat4 V, mat4 M_parent)
+	glm::mat4 renderBlade(mat4 P, mat4 V, mat4 M_parent, float w)
 	{
 		prog->bind();
 		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
@@ -408,25 +521,85 @@ public:
 		glDrawArrays(GL_TRIANGLES, 0, 50 * 36);
 		prog->unbind();
 
-		shapeprog->bind();
-		glUniformMatrix4fv(shapeprog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
-		glUniformMatrix4fv(shapeprog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		prog->bind();
+		glUniformMatrix4fv(prog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(prog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glBindVertexArray(VAO_CYL);
 
+		//send the matrices to the shaders
+		T_por = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+		R = glm::rotate(glm::mat4(1.0f), w, glm::vec3(0.0f, 1.0f, 0.0f));
+		T_attach = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.3f, 0.0f));
+		S = glm::scale(glm::mat4(1.0f), glm::vec3(0.25f, 0.05f, 1.0f));
+		glm::mat4 M_blade = M_axel * T_attach * T_por;
+		M = M_blade * R * S;
 
-		T_por = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
-		R = glm::rotate(glm::mat4(1.0f), 0.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-		T_attach = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0.5, 0));
-		S = glm::scale(glm::mat4(1.0f), glm::vec3(1.8, 0.18, 1.8));
-		mat4 M_blade = M_axel * T_attach * R * T_por;
-		M = M_blade * S;
-
-		glUniformMatrix4fv(shapeprog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
-		shape.draw(shapeprog);
-		shapeprog->unbind();
+		glUniformMatrix4fv(prog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glDrawArrays(GL_TRIANGLES, 0, 50 * 36);
+		prog->unbind();
 
 		return M_blade;
 	}
 
+	void renderGlobe(mat4 P, mat4 V, vec3 pos, float w)
+	{
+		mat4 M = mat4(1);
+		globeprog->bind();
+		glUniformMatrix4fv(globeprog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(globeprog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniform3f(globeprog->getUniform("camera_pos"), pos.x, pos.y, pos.z);
+
+		glm::mat4 T_por = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, 0));
+		glm::mat4 R = glm::rotate(glm::mat4(1.0f), w, glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 T_attach = glm::translate(glm::mat4(1.0f), glm::vec3(0, 0, -1.0f));
+		glm::mat4 S = glm::scale(glm::mat4(1.0f), glm::vec3(5, 5, 5));
+		glm::mat4 M_globe = T_attach * R * T_por;
+		M = M_globe * S;
+
+		glUniformMatrix4fv(globeprog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		globeshape.draw(globeprog);
+		globeprog->unbind();
+	}
+
+	void renderSnow(mat4 P, mat4 V, float t)
+	{
+		mat4 M = mat4(1);
+		snowprog->bind();
+		glBindVertexArray(VAO_SNOW);
+		glUniformMatrix4fv(snowprog->getUniform("P"), 1, GL_FALSE, &P[0][0]);
+		glUniformMatrix4fv(snowprog->getUniform("V"), 1, GL_FALSE, &V[0][0]);
+		glUniform1f(snowprog->getUniform("t"), t);
+		glUniform1f(snowprog->getUniform("r"), 0.06);
+
+		glm::mat4 R = glm::rotate(glm::mat4(1.0f), 1.57f, glm::vec3(0.0f, 0.0f, 1.0f));
+		glm::mat4 T = glm::translate(glm::mat4(1.0f), glm::vec3(0, -0.5f, 0));
+		M = mat4(1);
+		glUniformMatrix4fv(snowprog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glDrawArrays(GL_POINTS, 0, 4);
+
+		M = T;
+		glUniformMatrix4fv(snowprog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform1f(snowprog->getUniform("t"), -t + 1.57);
+		glUniform1f(snowprog->getUniform("r"), 0.1);
+		glDrawArrays(GL_POINTS, 0, 4);
+
+		T = glm::translate(glm::mat4(1.0f), glm::vec3(0.2f, 0, 0));
+		R = glm::rotate(glm::mat4(1.0f), 1.57f, glm::vec3(0.0f, 0.0f, 1.0f));
+		M = T * R;
+		glUniformMatrix4fv(snowprog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform1f(snowprog->getUniform("t"), -t + 1.57);
+		glUniform1f(snowprog->getUniform("r"), 0.15);
+		glDrawArrays(GL_POINTS, 0, 4);
+
+		T = glm::translate(glm::mat4(1.0f), glm::vec3(-0.1f, 0, 0));
+		R = glm::rotate(glm::mat4(1.0f), 3.1415f, glm::vec3(0.0f, 0.0f, 1.0f));
+		M = T * R;
+		glUniformMatrix4fv(snowprog->getUniform("M"), 1, GL_FALSE, &M[0][0]);
+		glUniform1f(snowprog->getUniform("t"), -t + 2);
+		glUniform1f(snowprog->getUniform("r"), 0.04);
+		glDrawArrays(GL_POINTS, 0, 4);
+		snowprog->unbind();
+	}
 
 	/****DRAW
 	This is the most important function in your program - this is where you
@@ -455,19 +628,20 @@ public:
 		 //Apply orthographic projection....
 		P = glm::perspective((float)(3.14159 / 4.), (float)((float)width/ (float)height), 0.1f, 1000.0f); //so much type casting... GLM metods are quite funny ones
 
-		//animation with the model matrix:
-		static float w = 0.0;
-		//w += 0.03;//rotation angle
-		static float t = 0;
+		static float w = 0.0, r = 0.0, t = 0.0;
+		r += 0.3;
 		t += 0.01;
-		float trans = 0;// sin(t) * 2;
+		if (a) w += 0.08;
+		if (d) w -= 0.08;
 
 		V = mycam.process(frametime);
 
 		mat4 M_body = renderBody(P, V, mat4(1), w);	
-		mat4 M_tail = renderTail(P, V, M_body);
-		mat4 M_blade = renderBlade(P, V, M_body);
+		mat4 M_tail = renderTail(P, V, M_body, r);
+		mat4 M_blade = renderBlade(P, V, M_body, r);
 		renderSkirts(P, V, M_body);
+		renderGlobe(P, V, -mycam.pos, w);
+		renderSnow(P, V, t);
 	}
 
 };

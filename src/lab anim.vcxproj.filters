@@ -29,5 +29,9 @@
     <None Include="..\resources\shader_vertex.glsl" />
     <None Include="..\resources\shape_fragment.glsl" />
     <None Include="..\resources\shape_vertex.glsl" />
+    <None Include="..\..\..\..\..\..\..\Connor%27s PC\Documents\School\3rd year\CPE-471\Graphics-scene\resources\globe_vertex.glsl" />
+    <None Include="..\..\..\..\..\..\..\Connor%27s PC\Documents\School\3rd year\CPE-471\Graphics-scene\resources\globe_fragment.glsl" />
+    <None Include="..\..\..\..\..\..\..\Connor%27s PC\Documents\School\3rd year\CPE-471\Graphics-scene\resources\snow_vertex.glsl" />
+    <None Include="..\..\..\..\..\..\..\Connor%27s PC\Documents\School\3rd year\CPE-471\Graphics-scene\resources\snow_fragment.glsl" />
   </ItemGroup>
 </Project>

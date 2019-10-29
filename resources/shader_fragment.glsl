@@ -11,8 +11,8 @@ void main()
 	vec3 ld = normalize(light_pos - vertex_pos);
 	float diffact = clamp(dot(normal, ld) + .4, 0, 1);
 
-	color.r = vertex_color.r * diffact;
-	color.g = vertex_color.g * diffact;
-	color.b = vertex_color.b * diffact;
+	color.r = normal.r ;//* diffact;
+	color.g = normal.g ;//* diffact;
+	color.b = normal.b ;//* diffact;
 	color.a=1;	//transparency: 1 .. 100% NOT transparent
 }
