@@ -3,6 +3,8 @@ Helicopter Animation
 
 This OpenGL program shows an animated helicopter in a snowglobe, that can be spun around using the keyboard
 
+![](screenshots/heli.PNG)
+
 Build Instructions
 ------------
 
